@@ -18,7 +18,8 @@
     "postcss-sort-media-queries": "^4.3.0",
     "sass": "^1.57.1",
     "vite": "^4.0.0",
-    "vite-plugin-handlebars": "^1.6.0"
+    "vite-plugin-handlebars": "^1.6.0",
+    "vite-plugin-pages": "^0.31.0"
   },
   "browserslist": [
     "last 3 versions",

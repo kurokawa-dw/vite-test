@@ -1,129 +1,87 @@
 import { defineConfig } from 'vite';
-import { resolve } from 'path';
+import { resolve, relative, dirname } from 'path'
 import handlebars from 'vite-plugin-handlebars';
-import { findAllFiles } from "./CustomBuildFunctions";
+import { readFileSync, readdirSync, statSync } from 'fs'
 
-// HTMLの複数出力を自動化する
-//./src配下のファイル一式を取得
-import fs from 'fs';
-const fileNameList = fs.readdirSync(resolve(__dirname, './src/'));
+let count = 0;
 
-//htmlファイルのみ抽出
-// const htmlFileList = fileNameList.filter(file => /.html$/.test(file));
+function getPages(dir) {
+  const pages = {}
+  const files = readdirSync(dir)
 
-// //build.rollupOptions.inputに渡すオブジェクトを生成
-// const inputFiles = {};
-// for (let i = 0; i < htmlFileList.length; i++) {
-//   const file = htmlFileList[i];
-//   inputFiles[file.slice(0,-5)] = resolve(__dirname, './src/' + file );
-//   /*
-//     この形を自動的に作る
-//     input:{
-//       index: resolve(__dirname, './src/index.html'),
-//       list: resolve(__dirname, './src/list.html')
-//     }
-//   */
-// }
+  files.forEach(file => {
+    const filePath = resolve(dir, file)
+    const isDirectory = statSync(filePath).isDirectory()
 
-// //HTML上で出し分けたい各ページごとの情報
-// const pageData = {
-//   '/index.html': {
-//     isHome: true,
-//     title: 'Main Page',
-//   },
-//   '/test/index.html': {
-//     isHome: false,
-//     title: 'List Page',
-//   },
-// };
+		// console.log('ファイルパス', statSync(filePath));
+		// console.log(pages);
+		count++;
 
-// //CSSとJSファイルに更新パラメータを追加
-// const htmlPlugin = () => {
-//   return {
-//     name: 'html-transform',
-//     transformIndexHtml(html) {
-//       //更新パラメータ作成
-//       const date = new Date();
-//       const param = date.getFullYear() + date.getMonth() + date.getDate() + date.getHours() + date.getMinutes() + date.getSeconds();
-
-// 			let setParamHtml = html.replace(/(?=.*\b\.css\b)/g, (match) => {
-// 				return match.replace(/\.css/, '.css?' + param);
-// 			});
-
-// 			return setParamHtml.replace(/(?=.*\b\.js\b)/g, (match) => {
-// 				return match.replace(/\.js/, '.js?' + param);
-// 			});
-//     }
-//   }
-// }
+		console.log(count)
 
 
-const root = resolve(__dirname, "./src");
-// const rollupOptionsInput = findAllFiles('./src', '.html');
+    if (isDirectory) {
+			const nestedPages = getPages(filePath)
+			Object.assign(pages, nestedPages)
+			// console.log(nestedPages);
+    } else if (file.endsWith('.html')) {
+      const name = relative(resolve(__dirname, 'src'), filePath).replace('.html', '')
+			console.log(name);
 
-export default defineConfig(() => {
+			if(name.split('/')[0] !== 'components'){
+				pages[name] = filePath
+			}
+    }
+  })
 
-	const pageExtensions = ['.html'];
-  const pageDir = resolve(root, './');
+  return pages
+}
 
-  // ページファイルの一覧を取得
-  const pages = fs.readdirSync(pageDir)
-    .filter((file) => pageExtensions.includes(file.split('.').pop()));
+export default defineConfig({
+  server: {
+    host: '0.0.0.0' //IPアドレスを有効化
+  },
+  base: './', //相対パスでビルドする
+  root: './src', //開発ディレクトリ設定
+	// publicDir: './src',
+  build: {
+    outDir: '../dist', //出力場所の指定
+    rollupOptions: { //ファイル出力設定
+      output: {
+        assetFileNames: (assetInfo) => {
+          let extType = assetInfo.name.split('.')[1];
+          //Webフォントファイルの振り分け
+          if (/ttf|otf|eot|woff|woff2/i.test(extType)) {
+            extType = 'fonts';
+          }
+          if (/png|jpe?g|svg|gif|tiff|bmp|ico/i.test(extType)) {
+            extType = 'images';
+          }
+          //ビルド時のCSS名を明記してコントロールする
+          if(extType === 'css') {
+            return `assets/css/main.css`;
+          }
+          return `assets/${extType}/[name][extname]`;
+        },
+        chunkFileNames: `assets/js/[name].js`,
+        entryFileNames: `assets/js/[name].js`
+      },
 
-  // rollupOptions.inputを動的に生成
-  const rollupOptionsInput = {};
-  pages.forEach((page) => {
-    const pageName = page.split('.')[0];
-    rollupOptionsInput[pageName] = resolve(pageDir, page);
-  });
+      //生成オブジェクトを渡す
+      // input: inputFiles,
+			input: {
+        ...getPages(resolve(__dirname, 'src')),
+      }
+    },
+  },
+  /*
+    プラグインの設定を追加
+  */
+  plugins: [
+    handlebars({
+      //コンポーネントの格納ディレクトリを指定
+      partialDirectory: resolve(__dirname, './src/components'),
 
-	return{
-		server: {
-			host: true //IPアドレスを有効化
-		},
-		base: './', //相対パスでビルドする
-		root: root, //開発ディレクトリ設定
-		build: {
-			outDir: '../dist', //出力場所の指定
-			rollupOptions: { //ファイル出力設定
-				output: {
-					assetFileNames: (assetInfo) => {
-						let extType = assetInfo.name.split('.')[1];
-						//Webフォントファイルの振り分け
-						if (/ttf|otf|eot|woff|woff2/i.test(extType)) {
-							extType = 'fonts';
-						}
-						if (/png|jpe?g|svg|gif|tiff|bmp|ico/i.test(extType)) {
-							extType = 'images';
-						}
-						//ビルド時のCSS名を明記してコントロールする
-						if(extType === 'css') {
-							return `assets/css/main.css`;
-						}
-						return `assets/${extType}/[name][extname]`;
-					},
-					chunkFileNames: 'assets/js/[name].js',
-					entryFileNames: 'assets/js/[name].js',
-				},
-				// input:
-				//生成オブジェクトを渡す
-				input: rollupOptionsInput,
-			},
-		},
-		/*
-			プラグインの設定を追加
-		*/
-		plugins: [
-			handlebars({
-				//コンポーネントの格納ディレクトリを指定
-				partialDirectory: resolve(__dirname, './src/components'),
-				//各ページ情報の読み込み
-				context(pagePath) {
-					return pageData[pagePath];
-				},
-			}),
-			// htmlPlugin()
-		],
-
-	}
+    }),
+  ],
 });
