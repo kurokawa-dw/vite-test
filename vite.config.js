@@ -15,9 +15,9 @@ function getPages(dir) {
 
 		// console.log('ファイルパス', statSync(filePath));
 		// console.log(pages);
-		count++;
+		// count++;
 
-		console.log(count)
+		// console.log(count)
 
 
     if (isDirectory) {
@@ -63,8 +63,10 @@ export default defineConfig({
           }
           return `assets/${extType}/[name][extname]`;
         },
-        chunkFileNames: `assets/js/[name].js`,
-        entryFileNames: `assets/js/[name].js`
+        // chunkFileNames: `assets/js/[name].js`,
+        // entryFileNames: `assets/js/[name].js`
+				chunkFileNames: `assets/js/main.js`,
+        entryFileNames: `assets/js/main.js`
       },
 
       //生成オブジェクトを渡す
