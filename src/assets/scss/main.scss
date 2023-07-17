@@ -1,6 +1,10 @@
 @forward "./pages/index";
 
 body{
-	opacity: 0.5;
+	// opacity: 0.5;
+	// background-image: url(/assets/images/cb.jpg);
+	img{
+		max-width: 100%;
+	}
 }
 

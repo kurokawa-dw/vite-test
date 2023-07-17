@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import { resolve, relative, dirname } from 'path'
 import handlebars from 'vite-plugin-handlebars';
+import vue from '@vitejs/plugin-vue'
 import { readFileSync, readdirSync, statSync } from 'fs'
 
 let count = 0;
@@ -43,7 +44,7 @@ export default defineConfig({
   },
   base: './', //相対パスでビルドする
   root: './src', //開発ディレクトリ設定
-	// publicDir: './src',
+	publicDir: './public',
   build: {
     outDir: '../dist', //出力場所の指定
     rollupOptions: { //ファイル出力設定
@@ -59,14 +60,14 @@ export default defineConfig({
           }
           //ビルド時のCSS名を明記してコントロールする
           if(extType === 'css') {
-            return `assets/css/main.css`;
+            return `assets/styles/main.css`;
           }
           return `assets/${extType}/[name][extname]`;
         },
         // chunkFileNames: `assets/js/[name].js`,
         // entryFileNames: `assets/js/[name].js`
-				chunkFileNames: `assets/js/main.js`,
-        entryFileNames: `assets/js/main.js`
+				chunkFileNames: `assets/javascripts/main.js`,
+        entryFileNames: `assets/javascripts/main.js`
       },
 
       //生成オブジェクトを渡す
@@ -80,6 +81,7 @@ export default defineConfig({
     プラグインの設定を追加
   */
   plugins: [
+		vue(),
     handlebars({
       //コンポーネントの格納ディレクトリを指定
       partialDirectory: resolve(__dirname, './src/components'),
