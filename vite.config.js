@@ -44,7 +44,7 @@ export default defineConfig({
   },
   base: './', //相対パスでビルドする
   root: './src', //開発ディレクトリ設定
-	publicDir: './public',
+	publicDir: '../public', //rootから相対で指定
   build: {
     outDir: '../dist', //出力場所の指定
     rollupOptions: { //ファイル出力設定
