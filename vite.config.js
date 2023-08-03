@@ -40,7 +40,10 @@ function getPages(dir) {
 
 export default defineConfig({
   server: {
-    host: '0.0.0.0' //IPアドレスを有効化
+    host: '0.0.0.0', //IPアドレスを有効化
+		proxy: {
+			'/dist': 'http://192.168.1.8'
+		}
   },
   base: './', //相対パスでビルドする
   root: './src', //開発ディレクトリ設定
